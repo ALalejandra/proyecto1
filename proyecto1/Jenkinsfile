@@ -1,5 +1,10 @@
 pipeline {
-    agent any
+    // Le decimos a Jenkins que use un contenedor de Node para correr las pruebas e instalar dependencias
+    agent {
+        docker { 
+            image 'node:18-alpine' 
+        }
+    }
     
     environment {
         REGISTRY = 'ghcr.io'
@@ -9,8 +14,7 @@ pipeline {
     stages {
         stage('Prepare') {
             steps {
-                echo '⚙️ Preparando entorno...'
-                sh 'docker --version'
+                echo '⚙️ Preparando entorno dentro del contenedor...'
                 sh 'node --version'
                 sh 'npm --version'
             }
@@ -30,30 +34,10 @@ pipeline {
             }
         }
         
+        // Dejamos las etapas de empaquetado listas para cuando configures Docker en Jenkins
         stage('Build Docker Image') {
             steps {
-                echo '🐳 Construyendo imagen Docker...'
-                script {
-                    // Construcción limpia de la imagen
-                    sh "docker build -t ${REGISTRY}/${IMAGE_NAME}:latest ."
-                }
-            }
-        }
-        
-        stage('Push to Registry') {
-            when {
-                branch 'main'
-            }
-            steps {
-                echo '📤 Publicando imagen en GitHub Container Registry...'
-                withCredentials([
-                    string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')
-                ]) {
-                    sh '''
-                        echo $GITHUB_TOKEN | docker login ghcr.io -u ALalejandra --password-stdin
-                        docker push ghcr.io/ALalejandra/proyecto1:latest
-                    '''
-                }
+                echo '🐳 Saltando construcción de imagen en entorno local...'
             }
         }
     }
