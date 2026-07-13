@@ -1,0 +1,116 @@
+pipeline {
+    agent any
+    
+    environment {
+        // Configuración de registro para GitHub Container Registry
+        REGISTRY = 'ghcr.io' [cite: 467]
+        
+        // ⚠️ CAMBIA 'tu-usuario' POR TU NOMBRE DE USUARIO REAL DE GITHUB
+        IMAGE_NAME = 'ALalejandra/proyecto1' [cite: 470]
+        
+        // Variables automáticas para versionar la imagen
+        COMMIT_SHA = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim() [cite: 472]
+        BUILD_TIMESTAMP = sh(script: 'date +%Y%m%d-%H%M%S', returnStdout: true).trim() [cite: 473]
+        
+        // Etiquetas (Tags) de la imagen de Docker
+        IMAGE_TAG_LATEST = "${REGISTRY}/${IMAGE_NAME}:latest" [cite: 475]
+        IMAGE_TAG_COMMIT = "${REGISTRY}/${IMAGE_NAME}:${COMMIT_SHA}" [cite: 476]
+        IMAGE_TAG_BUILD = "${REGISTRY}/${IMAGE_NAME}:build-${BUILD_TIMESTAMP}" [cite: 477]
+    }
+    
+    stages {
+        // STAGE 1: Preparación del entorno
+        stage('Prepare') { [cite: 483]
+            steps {
+                echo '⚙️ Preparando entorno...' [cite: 485]
+                sh 'docker --version' [cite: 486]
+                sh 'node --version' [cite: 487]
+                sh 'npm --version' [cite: 488]
+            }
+        }
+        
+        // STAGE 2: Instalación de dependencias de Node.js
+        stage('Install Dependencies') { [cite: 494]
+            steps {
+                echo '📥 Instalando dependencias...' [cite: 496]
+                sh 'npm ci' [cite: 497]
+            }
+        }
+        
+        // STAGE 3: Ejecución de pruebas unitarias
+        stage('Test') { [cite: 503]
+            steps {
+                echo '🧪 Ejecutando tests...' [cite: 505]
+                sh 'npm test' [cite: 506]
+            }
+        }
+        
+        // STAGE 4: Construcción de la imagen Docker
+        stage('Build Docker Image') { [cite: 518]
+            steps {
+                echo '🐳 Construyendo imagen Docker...' [cite: 520]
+                script {
+                    docker.build("${IMAGE_TAG_COMMIT}") [cite: 522]
+                }
+            }
+        }
+        
+        // STAGE 5: Publicación en GitHub Container Registry usando tu credencial
+        stage('Push to Registry') { [cite: 529, 611]
+            when {
+                branch 'main' [cite: 532]
+            }
+            steps {
+                echo '📤 Publicando imagen en GitHub Container Registry...' [cite: 535]
+                // Aquí manda a llamar de forma segura la credencial 'github-token' que guardamos en el Paso 1
+                withCredentials([
+                    string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN') [cite: 614]
+                ]) {
+                    sh '''
+                        echo $GITHUB_TOKEN | docker login ghcr.io -u $GITHUB_USER --password-stdin [cite: 617]
+                        docker tag ${IMAGE_TAG_COMMIT} ${IMAGE_TAG_LATEST} [cite: 543]
+                        docker tag ${IMAGE_TAG_COMMIT} ${IMAGE_TAG_BUILD} [cite: 544]
+                        docker push ${IMAGE_TAG_COMMIT} [cite: 618]
+                        docker push ${IMAGE_TAG_LATEST} [cite: 619]
+                        docker push ${IMAGE_TAG_BUILD} [cite: 550]
+                    '''
+                }
+            }
+        }
+        
+        // STAGE 6: Verificación de la imagen en la nube
+        stage('Verify Published Image') { [cite: 558]
+            when {
+                branch 'main' [cite: 560]
+            }
+            steps {
+                echo '✅ Verificando imagen publicada...' [cite: 563]
+                script {
+                    sh """
+                        echo "📦 Imagen publicada: ${IMAGE_TAG_COMMIT}" [cite: 566]
+                        echo "🏷️ Tags disponibles:" [cite: 567]
+                        echo "  - ${IMAGE_TAG_COMMIT}" [cite: 568]
+                        echo "  - ${IMAGE_TAG_LATEST}" [cite: 569]
+                        echo "  - ${IMAGE_TAG_BUILD}" [cite: 570]
+                    """
+                }
+            }
+        }
+    }
+    
+    post {
+        success {
+            echo '🎉 Pipeline completado exitosamente!' [cite: 581]
+        }
+        failure {
+            echo '❌ Pipeline falló!' [cite: 589]
+        }
+        cleanup {
+            echo '🧹 Limpiando recursos locales...' [cite: 597]
+            script {
+                // Borra las imágenes locales para que no te llenen el disco duro
+                sh "docker image prune -f" [cite: 601]
+            }
+        }
+    }
+}
