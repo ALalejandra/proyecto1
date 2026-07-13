@@ -1,10 +1,6 @@
 pipeline {
-    // Le decimos a Jenkins que use un contenedor de Node para correr las pruebas e instalar dependencias
-    agent {
-        docker { 
-            image 'node:18-alpine' 
-        }
-    }
+    // Usamos el agente universal que tu Jenkins sí reconoce
+    agent any
     
     environment {
         REGISTRY = 'ghcr.io'
@@ -14,40 +10,34 @@ pipeline {
     stages {
         stage('Prepare') {
             steps {
-                echo '⚙️ Preparando entorno dentro del contenedor...'
-                sh 'node --version'
-                sh 'npm --version'
+                echo '⚙️ Validando comandos disponibles...'
+                // Usamos comandos de Windows (bat) ya que tu Jenkins corre de forma local
+                bat 'node --version'
+                bat 'npm --version'
             }
         }
         
         stage('Install Dependencies') {
             steps {
-                echo '📥 Instalando dependencias...'
-                sh 'npm ci'
+                echo '📥 Instalando dependencias de la app...'
+                bat 'npm ci'
             }
         }
         
         stage('Test') {
             steps {
-                echo '🧪 Ejecutando tests...'
-                sh 'npm test'
-            }
-        }
-        
-        // Dejamos las etapas de empaquetado listas para cuando configures Docker en Jenkins
-        stage('Build Docker Image') {
-            steps {
-                echo '🐳 Saltando construcción de imagen en entorno local...'
+                echo '🧪 Ejecutando pruebas del proyecto...'
+                bat 'npm test'
             }
         }
     }
     
     post {
         success {
-            echo '🎉 Pipeline completado exitosamente!'
+            echo '🎉 ¡Felicidades! El pipeline se ejecutó y completó con éxito.'
         }
         failure {
-            echo '❌ Pipeline falló!'
+            echo '❌ El pipeline tuvo un fallo, revisa los logs de arriba.'
         }
     }
 }
