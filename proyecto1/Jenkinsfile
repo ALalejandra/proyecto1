@@ -7,7 +7,9 @@ pipeline {
     
     environment {
         REGISTRY = 'ghcr.io'
-        IMAGE_NAME = 'ALalejandra/proyecto1'
+        IMAGE_NAME = 'ghcr.io/alalejandra/proyecto1:latest'
+        // ✨ Vincula las credenciales seguras de Jenkins:
+        GITHUB_CREDENTIALS = credentials('github-token-id') 
     }
     
     stages {
@@ -42,17 +44,27 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 echo '🐳 Construyendo imagen Docker desde la subcarpeta...'
-                sh 'docker build -t ghcr.io/alalejandra/proyecto1:latest proyecto1/'
+                sh "docker build -t ${IMAGE_NAME} proyecto1/"
+            }
+        }
+
+        // 📤 ESTA ES LA NUEVA ETAPA FINAL DE LA PRÁCTICA:
+        stage('Push to Registry') {
+            steps {
+                echo '📤 Autenticando y subiendo imagen a GitHub Container Registry...'
+                // Se loguea de forma segura usando el token de Jenkins y hace el push
+                sh "echo \$GITHUB_CREDENTIALS_PSW | docker login ${REGISTRY} -u \$GITHUB_CREDENTIALS_USR --password-stdin"
+                sh "docker push ${IMAGE_NAME}"
             }
         }
     }
     
     post {
         success {
-            echo '🎉 ¡Felicidades! El pipeline se ejecutó y construyó la imagen con éxito.'
+            echo '🎉 ¡Felicidades! El pipeline se completó y la imagen se subió a GHCR con éxito.'
         }
         failure {
-            echo '❌ El pipeline tuvo un fallo, revisa los logs.'
+            echo '❌ El pipeline tuvo un fallo en alguna de las fases.'
         }
     }
 }
