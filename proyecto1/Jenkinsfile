@@ -13,24 +13,29 @@ pipeline {
     stages {
         stage('Prepare') {
             steps {
-                echo '⚙️ Validando comandos disponibles...'
-                sh 'node --version'
-                sh 'npm --version'
+                dir('proyecto1') {
+                    echo '⚙️ Validando comandos disponibles...'
+                    sh 'node --version'
+                    sh 'npm --version'
+                }
             }
         }
         
         stage('Install Dependencies') {
             steps {
-                echo '📥 Instalando dependencias de la app...'
-                // Cambiamos 'npm ci' por 'npm install'
-                sh 'npm install'
+                dir('proyecto1') {
+                    echo '📥 Instalando dependencias de la app...'
+                    sh 'npm install'
+                }
             }
         }
         
         stage('Test') {
             steps {
-                echo '🧪 Ejecutando pruebas del proyecto...'
-                sh 'npm test'
+                dir('proyecto1') {
+                    echo '🧪 Ejecutando pruebas del proyecto...'
+                    sh 'npm test'
+                }
             }
         }
     }
