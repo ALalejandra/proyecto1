@@ -3,6 +3,8 @@ pipeline {
     
     tools {
         nodejs 'NodeJS'
+        // ✨ ESTA LÍNEA ES LA NUEVA CLAVE:
+        docker 'Docker'
     }
     
     environment {
@@ -39,7 +41,6 @@ pipeline {
             }
         }
 
-        // 🐳 AQUÍ VA EL NUEVO COMANDO AUTOMATIZADO:
         stage('Build Docker Image') {
             steps {
                 echo '🐳 Construyendo imagen Docker desde la subcarpeta...'
