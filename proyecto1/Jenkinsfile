@@ -1,6 +1,11 @@
 pipeline {
     agent any
     
+    // ESTO ES LO CLAVE: Le dice a Jenkins que descargue el Node que configuramos
+    tools {
+        nodejs 'NodeJS'
+    }
+    
     environment {
         REGISTRY = 'ghcr.io'
         IMAGE_NAME = 'ALalejandra/proyecto1'
@@ -10,7 +15,6 @@ pipeline {
         stage('Prepare') {
             steps {
                 echo '⚙️ Validando comandos disponibles...'
-                // Cambiamos 'bat' por 'sh' para entorno Linux
                 sh 'node --version'
                 sh 'npm --version'
             }
