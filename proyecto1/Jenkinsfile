@@ -1,7 +1,6 @@
 pipeline {
     agent any
     
-    // ESTO ES LO CLAVE: Le dice a Jenkins que descargue el Node que configuramos
     tools {
         nodejs 'NodeJS'
     }
@@ -23,7 +22,8 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 echo '📥 Instalando dependencias de la app...'
-                sh 'npm ci'
+                // Cambiamos 'npm ci' por 'npm install'
+                sh 'npm install'
             }
         }
         
