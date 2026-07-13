@@ -1,5 +1,4 @@
 pipeline {
-    // Usamos el agente universal que tu Jenkins sí reconoce
     agent any
     
     environment {
@@ -11,23 +10,23 @@ pipeline {
         stage('Prepare') {
             steps {
                 echo '⚙️ Validando comandos disponibles...'
-                // Usamos comandos de Windows (bat) ya que tu Jenkins corre de forma local
-                bat 'node --version'
-                bat 'npm --version'
+                // Cambiamos 'bat' por 'sh' para entorno Linux
+                sh 'node --version'
+                sh 'npm --version'
             }
         }
         
         stage('Install Dependencies') {
             steps {
                 echo '📥 Instalando dependencias de la app...'
-                bat 'npm ci'
+                sh 'npm ci'
             }
         }
         
         stage('Test') {
             steps {
                 echo '🧪 Ejecutando pruebas del proyecto...'
-                bat 'npm test'
+                sh 'npm test'
             }
         }
     }
