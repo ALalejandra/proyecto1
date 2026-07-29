@@ -1,0 +1,68 @@
+pipeline {
+    agent any
+
+    environment {
+        REGISTRY_USER = 'tu_usuario_dockerhub'
+        IMAGE_NAME    = 'mi-microservicio'
+        IMAGE_TAG     = "${BUILD_NUMBER}"
+    }
+
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+        timeout(time: 1, unit: 'HOURS')
+        timestamps()
+        disableConcurrentBuilds()
+    }
+
+    stages {
+
+        stage('Checkout / Inicio') {
+            steps {
+                echo '📥 Inicio de la pipeline desde SCM / Git...'
+            }
+        }
+
+        stage('Lint & Static Analysis') {
+            steps {
+                echo '🔍 Ejecutando análisis estático del código...'
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                echo '🛡️ Verificando calidad de código con SonarQube...'
+            }
+        }
+
+        stage('Unit & Integration Tests') {
+            steps {
+                echo '🧪 Ejecutando pruebas unitarias de la Práctica 2...'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                echo '🐳 Construyendo imagen Docker del microservicio...'
+            }
+        }
+
+        stage('Deploy to Staging') {
+            steps {
+                echo '🚀 Desplegando en el entorno de pruebas...'
+            }
+        }
+    }
+
+    post {
+        always {
+            echo '🧹 Limpiando espacio de trabajo...'
+            cleanWs()
+        }
+        success {
+            echo '✅ Práctica 2: Pipeline completado con éxito desde Git.'
+        }
+        failure {
+            echo '❌ El Pipeline de la Práctica 2 ha fallado.'
+        }
+    }
+}
